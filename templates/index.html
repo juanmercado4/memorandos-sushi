@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memorandos — Sushi Break SAS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+    }
+    header .logo-box {
+      width: 52px; height: 52px;
+      background: #e63946;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 900; color: #fff;
+      flex-shrink: 0;
+    }
+    header .brand h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: .5px; }
+    header .brand p  { font-size: .78rem; color: #a0aec0; margin-top: 2px; }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.25rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.75rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 1.25rem;
+      padding-bottom: .6rem;
+      border-bottom: 2px solid #e63946;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 1rem; }
+    label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: .35rem;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: .6rem .85rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: .95rem;
+      color: #1a1a2e;
+      background: #fafafa;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #1a1a2e;
+      box-shadow: 0 0 0 3px rgba(26,26,46,.1);
+      background: #fff;
+    }
+    textarea { resize: vertical; min-height: 110px; }
+
+    .radio-group {
+      display: flex; gap: 1rem; margin-top: .2rem;
+    }
+    .radio-group label {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .9rem; color: #1a1a2e;
+      text-transform: none; letter-spacing: 0;
+      font-weight: 500; cursor: pointer;
+      margin: 0;
+    }
+    .radio-group input[type="radio"] { width: auto; }
+
+    /* ── Submit button ── */
+    #btn-analizar {
+      width: 100%;
+      padding: .75rem;
+      background: #1a1a2e;
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: .5rem;
+      letter-spacing: .5px;
+    }
+    #btn-analizar:hover  { background: #2d2d5e; }
+    #btn-analizar:active { transform: scale(.98); }
+    #btn-analizar:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: none;
+      width: 20px; height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result panel ── */
+    #resultado { display: none; }
+    #resultado .card { height: 100%; }
+
+    .badge {
+      display: inline-block;
+      padding: .3rem .9rem;
+      border-radius: 99px;
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 1rem;
+    }
+    .badge-leve   { background: #fef3c7; color: #92400e; }
+    .badge-media  { background: #fed7aa; color: #7c2d12; }
+    .badge-grave  { background: #fee2e2; color: #7f1d1d; }
+
+    .doc-type {
+      font-size: .85rem;
+      font-weight: 700;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: .75rem;
+    }
+
+    .articulos-list {
+      list-style: none;
+      margin: .5rem 0 1rem;
+    }
+    .articulos-list li {
+      font-size: .82rem;
+      color: #4a5568;
+      padding: .25rem 0 .25rem .75rem;
+      border-left: 3px solid #1a1a2e;
+      margin-bottom: .4rem;
+    }
+
+    .recomendacion-box {
+      background: #f0f4ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      font-size: .88rem;
+      color: #1e3a8a;
+      margin-bottom: 1.25rem;
+    }
+
+    .doc-preview {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: .88rem;
+      color: #374151;
+      line-height: 1.7;
+      max-height: 320px;
+      overflow-y: auto;
+      margin-bottom: 1.25rem;
+      white-space: pre-wrap;
+    }
+
+    .download-btns {
+      display: flex; gap: .75rem;
+    }
+    .btn-pdf, .btn-word {
+      flex: 1;
+      padding: .65rem;
+      border: none;
+      border-radius: 8px;
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: opacity .2s, transform .1s;
+      display: block;
+    }
+    .btn-pdf  { background: #e63946; color: #fff; }
+    .btn-word { background: #2563eb; color: #fff; }
+    .btn-pdf:hover, .btn-word:hover { opacity: .88; }
+    .btn-pdf:active, .btn-word:active { transform: scale(.97); }
+
+    .error-box {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      color: #7f1d1d;
+      font-size: .88rem;
+    }
+
+    /* ── Placeholder ── */
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 300px;
+      color: #94a3b8;
+      text-align: center;
+    }
+    .placeholder .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .placeholder p { font-size: .95rem; max-width: 240px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-box">SB</div>
+  <div class="brand">
+    <h1>Sushi Break SAS &nbsp;·&nbsp; Sistema de Memorandos</h1>
+    <p>NIT 901359641-1 &nbsp;|&nbsp; Gestión Disciplinaria Laboral</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Formulario ── -->
+  <div class="card">
+    <h2>Nueva Situación Disciplinaria</h2>
+    <form id="form-memorando" autocomplete="off">
+
+      <div class="form-group">
+        <label for="nombre">Nombre del Empleado</label>
+        <input id="nombre" name="nombre" type="text" placeholder="Nombre completo" required />
+      </div>
+
+      <div class="form-group">
+        <label for="cargo">Cargo</label>
+        <input id="cargo" name="cargo" type="text" placeholder="Ej: Cocinero, Mesero, Cajero…" required />
+      </div>
+
+      <div class="form-group">
+        <label for="sede">Sede</label>
+        <select id="sede" name="sede" required>
+          <option value="" disabled selected>Seleccione una sede</option>
+          {% for s in sedes %}
+          <option value="{{ s }}">{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="fecha">Fecha del Documento</label>
+        <input id="fecha" name="fecha" type="date" value="{{ today }}" required />
+      </div>
+
+      <div class="form-group">
+        <label>¿Es Reincidente?</label>
+        <div class="radio-group">
+          <label><input type="radio" name="reincidente" value="no" checked /> No</label>
+          <label><input type="radio" name="reincidente" value="si" /> Sí</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="descripcion">Descripción de la Situación</label>
+        <textarea id="descripcion" name="descripcion"
+          placeholder="Describa detalladamente los hechos ocurridos, fecha, hora, testigos si los hay, y cualquier información relevante…"
+          required></textarea>
+      </div>
+
+      <button type="submit" id="btn-analizar">
+        <span id="btn-text">Analizar y Generar Documento</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+    </form>
+  </div>
+
+  <!-- ── Resultado ── -->
+  <div id="resultado">
+    <div class="card">
+      <h2>Documento Generado</h2>
+      <div id="resultado-contenido"></div>
+    </div>
+  </div>
+
+  <div id="placeholder-panel" class="card">
+    <div class="placeholder">
+      <div class="icon">📄</div>
+      <p>Complete el formulario y haga clic en <strong>Analizar</strong> para generar el documento.</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const form = document.getElementById('form-memorando');
+const btnText = document.getElementById('btn-text');
+const spinner = document.getElementById('spinner');
+const btnAnalizar = document.getElementById('btn-analizar');
+const resultadoDiv = document.getElementById('resultado');
+const placeholderPanel = document.getElementById('placeholder-panel');
+const resultadoContenido = document.getElementById('resultado-contenido');
+
+const BADGE_CLASS = { LEVE: 'badge-leve', MEDIA: 'badge-media', GRAVE: 'badge-grave' };
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  // Show spinner
+  btnText.style.display = 'none';
+  spinner.style.display = 'block';
+  btnAnalizar.disabled = true;
+
+  const payload = {
+    nombre: form.nombre.value.trim(),
+    cargo: form.cargo.value.trim(),
+    sede: form.sede.value,
+    fecha: form.fecha.value,
+    reincidente: form.querySelector('input[name="reincidente"]:checked').value,
+    descripcion: form.descripcion.value.trim(),
+  };
+
+  try {
+    const res = await fetch('/analizar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      showError(data.error || 'Error al procesar la solicitud');
+      return;
+    }
+
+    renderResultado(data);
+  } catch (err) {
+    showError('Error de conexión: ' + err.message);
+  } finally {
+    btnText.style.display = 'inline';
+    spinner.style.display = 'none';
+    btnAnalizar.disabled = false;
+  }
+});
+
+function showError(msg) {
+  placeholderPanel.style.display = 'none';
+  resultadoDiv.style.display = 'block';
+  resultadoContenido.innerHTML = `<div class="error-box">⚠️ ${msg}</div>`;
+}
+
+function renderResultado(data) {
+  const badgeClass = BADGE_CLASS[data.tipo_falta] || 'badge-leve';
+  const articulos = (data.articulos || []).map(a => `<li>${a}</li>`).join('');
+  const cuerpo = (data.documento.cuerpo || '').replace(/</g, '&lt;');
+
+  resultadoContenido.innerHTML = `
+    <span class="badge ${badgeClass}">Falta ${data.tipo_falta}</span>
+    <div class="doc-type">${data.tipo_documento}</div>
+
+    <p style="font-size:.85rem;color:#4a5568;margin-bottom:.4rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Artículos Aplicables</p>
+    <ul class="articulos-list">${articulos}</ul>
+
+    <div class="recomendacion-box">💡 ${data.recomendacion}</div>
+
+    <p style="font-size:.85rem;color:#4a5568;margin-bottom:.5rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;">Vista Previa del Documento</p>
+    <div class="doc-preview">${cuerpo}</div>
+
+    <div class="download-btns">
+      <a href="/generar_pdf" class="btn-pdf btn-pdf">⬇ Descargar PDF</a>
+      <a href="/generar_word" class="btn-word btn-word">⬇ Descargar Word</a>
+    </div>
+  `;
+
+  placeholderPanel.style.display = 'none';
+  resultadoDiv.style.display = 'block';
+  resultadoDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+</script>
+
+</body>
+</html>

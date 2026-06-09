@@ -286,6 +286,16 @@
       </div>
 
       <div class="form-group">
+        <label for="tipo_documento">Tipo de Documento</label>
+        <select id="tipo_documento" name="tipo_documento" required>
+          <option value="llamado">📋 Llamado de Atención</option>
+          <option value="descargos">⚖️ Citación a Descargos</option>
+          <option value="sancion">🚫 Sanción Disciplinaria</option>
+          <option value="terminacion">❌ Terminación de Contrato</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label>¿Es Reincidente?</label>
         <div class="radio-group">
           <label><input type="radio" name="reincidente" value="no" checked /> No</label>
@@ -301,7 +311,7 @@
       </div>
 
       <button type="submit" id="btn-analizar">
-        <span id="btn-text">Analizar y Generar Documento</span>
+        <span id="btn-text">Generar Documento</span>
         <div class="spinner" id="spinner"></div>
       </button>
 
@@ -349,6 +359,7 @@ form.addEventListener('submit', async (e) => {
     cargo: form.cargo.value.trim(),
     sede: form.sede.value,
     fecha: form.fecha.value,
+    tipo_documento: form.tipo_documento.value,
     reincidente: form.querySelector('input[name="reincidente"]:checked').value,
     descripcion: form.descripcion.value.trim(),
   };

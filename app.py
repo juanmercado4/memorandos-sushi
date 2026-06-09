@@ -34,59 +34,52 @@ CARGO_REP = "Representante Legal"
 
 SEDES = ["NOVENA", "NORTE", "OESTE", "V LILI", "JAMUNDI", "PALMIRA", "CP", "MARBELLA"]
 
-SYSTEM_PROMPT = """Eres un experto en derecho laboral colombiano especializado en el Código Sustantivo del Trabajo (CST) y reglamentos internos de trabajo. Tu tarea es analizar situaciones disciplinarias laborales y generar documentos formales.
+TIPOS_DOCUMENTO = {
+    "llamado":     "MEMORANDO DE LLAMADO DE ATENCIÓN",
+    "descargos":   "CITACIÓN A DILIGENCIA DE DESCARGOS",
+    "sancion":     "MEMORANDO DE SANCIÓN DISCIPLINARIA",
+    "terminacion": "CARTA DE TERMINACIÓN DE CONTRATO",
+}
 
-CLASIFICACIÓN DE FALTAS según el Reglamento Interno de Trabajo colombiano:
+SYSTEM_PROMPT = """Eres un experto en derecho laboral colombiano especializado en el Código Sustantivo del Trabajo (CST) y reglamentos internos de trabajo. Tu tarea es redactar documentos disciplinarios laborales formales según el tipo que te indique el usuario.
 
-FALTA LEVE: Comportamientos que afectan levemente el orden interno.
-- Llegadas tarde esporádicas (1-3 veces al mes)
-- Descuidos menores en presentación personal
-- Uso ocasional de celular en horas de trabajo
-- Pequeños descuidos en el puesto de trabajo
-- Trato descortés aislado con compañeros
-Artículos aplicables: CST Art. 58 (obligaciones del trabajador), Art. 60 (prohibiciones al trabajador), Art. 111 (reglamento de trabajo)
+ARTÍCULOS DEL CST SEGÚN TIPO DE DOCUMENTO:
 
-FALTA MEDIA: Comportamientos que afectan moderadamente el desempeño o convivencia.
-- Ausentismo sin justificación (1-2 días)
-- Incumplimiento de procedimientos establecidos
-- Conflictos recurrentes con compañeros
-- Descuido en manejo de bienes de la empresa
-- Incumplimiento de instrucciones del jefe inmediato
-- Reincidencia en faltas leves
-Artículos aplicables: CST Art. 62 (causas de terminación), Art. 58, Art. 60, Art. 112
+LLAMADO DE ATENCIÓN:
+- CST Art. 58 — Obligaciones del trabajador
+- CST Art. 60 — Prohibiciones al trabajador
+- CST Art. 111 — Reglamento interno de trabajo
 
-FALTA GRAVE: Comportamientos que vulneran gravemente los derechos de la empresa o compañeros.
-- Hurto o apropiación de bienes
-- Agresión física o verbal grave
-- Acoso laboral o sexual
-- Abandono del puesto de trabajo
-- Presentarse en estado de embriaguez o bajo efectos de sustancias
-- Revelación de información confidencial
-- Falsificación de documentos
-- Daño intencional a bienes de la empresa
-- Reincidencia en faltas medias o graves previas
-Artículos aplicables: CST Art. 62 num. 6, 9, 10, 11, Art. 58, Art. 60, Ley 1010/2006 (acoso laboral)
+CITACIÓN A DESCARGOS:
+- CST Art. 115 — Procedimiento disciplinario (derecho a ser escuchado)
+- CST Art. 62 — Causas justas de terminación
+- CST Art. 29 — Debido proceso
 
-DOCUMENTOS A GENERAR:
-- FALTA LEVE → Memorando de Llamado de Atención por Escrito
-- FALTA MEDIA → Memorando de Llamado de Atención por Escrito (con advertencia de posibles consecuencias)
-- FALTA GRAVE → Citación a Diligencia de Descargos
+SANCIÓN DISCIPLINARIA (suspensión sin sueldo):
+- CST Art. 112 — Sanciones disciplinarias
+- CST Art. 113 — Límites de las sanciones
+- CST Art. 115 — Procedimiento para imponer sanciones
+- CST Art. 58 — Obligaciones del trabajador
+
+TERMINACIÓN DE CONTRATO:
+- CST Art. 62 — Causas justas de terminación con justa causa
+- CST Art. 64 — Indemnización por terminación sin justa causa (si aplica)
+- CST Art. 65 — Indemnización moratoria
 
 INSTRUCCIONES:
-1. Analiza la situación descrita
-2. Considera si hay reincidencia (agrava automáticamente la clasificación)
-3. Clasifica la falta objetivamente
-4. Genera el documento completo en tono formal, legal y profesional
-5. Cita artículos específicos del CST aplicables
-6. El documento debe ser completo, bien redactado y listo para imprimir
+1. El usuario ya eligió el tipo de documento — NO lo cambies ni lo cuestiones
+2. Redacta el documento completo en tono formal, legal y profesional
+3. Cita los artículos del CST que correspondan al tipo de documento
+4. El documento debe ser completo, bien redactado y listo para imprimir
+5. Para terminación de contrato, menciona la justa causa según el Art. 62 CST
 
 RESPONDE ÚNICAMENTE con un JSON válido con esta estructura exacta:
 {
   "tipo_falta": "LEVE|MEDIA|GRAVE",
-  "clasificacion": "descripción breve de la clasificación",
+  "clasificacion": "descripción breve de la situación",
   "articulos": ["Art. X CST - descripción", ...],
-  "recomendacion": "recomendación de acción",
-  "tipo_documento": "MEMORANDO DE LLAMADO DE ATENCIÓN|CITACIÓN A DILIGENCIA DE DESCARGOS",
+  "recomendacion": "observación legal relevante",
+  "tipo_documento": "nombre del documento tal como lo indicó el usuario",
   "documento": {
     "asunto": "texto del asunto",
     "cuerpo": "texto completo del cuerpo del documento con saltos de línea \\n"
@@ -109,11 +102,16 @@ def analizar():
     fecha = data.get("fecha", "").strip()
     reincidente = data.get("reincidente", "no")
     descripcion = data.get("descripcion", "").strip()
+    tipo_key = data.get("tipo_documento", "llamado")
 
     if not all([nombre, cargo, sede, fecha, descripcion]):
         return jsonify({"error": "Todos los campos son obligatorios"}), 400
 
-    user_message = f"""Analiza la siguiente situación disciplinaria y genera el documento correspondiente:
+    tipo_doc_label = TIPOS_DOCUMENTO.get(tipo_key, "MEMORANDO DE LLAMADO DE ATENCIÓN")
+
+    user_message = f"""Genera el siguiente documento disciplinario:
+
+TIPO DE DOCUMENTO SOLICITADO: {tipo_doc_label}
 
 DATOS DEL EMPLEADO:
 - Nombre: {nombre}
@@ -125,7 +123,7 @@ DATOS DEL EMPLEADO:
 DESCRIPCIÓN DE LA SITUACIÓN:
 {descripcion}
 
-Genera el documento completo considerando todos los datos anteriores. Si es reincidente, esto agrava la clasificación de la falta."""
+Redacta el documento completo del tipo indicado ({tipo_doc_label}). Usa los artículos del CST correspondientes a ese tipo de documento."""
 
     try:
         client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
